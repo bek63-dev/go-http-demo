@@ -14,12 +14,10 @@ func mainHandler(res http.ResponseWriter, req *http.Request) {
 	var headers string
 	var form string
 
-	if req.URL.Path == "/time" || req.URL.Path == "/time/" {
+	switch {
+	case req.URL.Path == "/time", req.URL.Path == "/time/":
 		out = time.Now().Format("02.01.2006 15:04:05")
-	}
-
-	switch req.Method {
-	case http.MethodGet:
+	case req.Method == http.MethodGet:
 		for k, values := range req.Header {
 			for _, v := range values {
 				headers += fmt.Sprintf("%s: %s\n", k, v)
@@ -27,7 +25,7 @@ func mainHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		out = fmt.Sprintf("Host: %s\nPath: %s\nMethod: %s\nHeader: %s\n",
 			req.Host, req.URL.Path, req.Method, headers)
-	case http.MethodPost:
+	case req.Method == http.MethodPost:
 		if err := req.ParseForm(); err != nil {
 			http.Error(res, "Ошибка парсинга формы", http.StatusBadRequest)
 			return
