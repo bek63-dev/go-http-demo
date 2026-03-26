@@ -11,7 +11,7 @@ func main() {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	log.Printf("Запуск клиента (timeout : %v). Целевой сервер: %s\n",
+	log.Printf("Запуск клиента (timeout: %v). Целевой сервер: %s\n",
 		client.Timeout, serverURL)
 	ExecuteWork(client, serverURL)
 }

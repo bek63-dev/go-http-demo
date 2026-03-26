@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ErrRequestCreationFailed = errors.New("не удалось создать запрос")
-	ErrRequestExecution      = errors.New("ошибка выполнения запроса")
-	ErrResponseBodyRead      = errors.New("ошибка чтения тела")
+	ErrRequestCreationFailed = errors.New("не удалось создать запрос: ")
+	ErrRequestExecution      = errors.New("ошибка выполнения запроса: ")
+	ErrResponseBodyRead      = errors.New("ошибка чтения тела: ")
 	ErrServerUnavailable     = errors.New("сервер недоступен")
 )
 
@@ -68,13 +68,13 @@ func ExecuteWork(client *http.Client, serverURL string) {
 	log.Printf("Проверка соединения с %s\n", serverURL)
 
 	if err := PingServer(client, serverURL); err != nil {
-		log.Printf("ошибка соединения к %s: %v", serverURL, err)
+		log.Printf("Ошибка соединения: %v", err)
 		return
 	}
-	log.Printf("Связь с сервером %s установлена\n", serverURL)
+	log.Printf("Связь с сервером установлена\n")
 
 	// GET запрос
-	log.Printf("\nЗапрос данных (GET) к %s\n", serverURL)
+	log.Printf("\nGET-запрос. Запрос данных к %s\n", serverURL)
 	getResponse, err := GetServerInfo(client, serverURL)
 	if err != nil {
 		log.Printf("GET ошибка: %v", err)
@@ -83,7 +83,7 @@ func ExecuteWork(client *http.Client, serverURL string) {
 	fmt.Printf("\nРезультат GET запроса: \n%s\n", getResponse)
 
 	// POST запрос
-	log.Printf("\nОтправка формы (POST) к %s\n", serverURL)
+	log.Printf("\nPOST-запрос. Отправка формы к %s\n", serverURL)
 	form := url.Values{}
 	form.Set("nickname", "Student")
 	form.Set("feedback", "Всё отлично!")
