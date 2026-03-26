@@ -25,8 +25,19 @@ func PingServer(client *http.Client, serverURL string) error {
 	return nil
 }
 
+func readBody(resp *http.Response) (string, error) {
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrResponseBodyRead, err)
+	}
+
+	return string(body), nil
+}
+
 func GetServerInfo(client *http.Client, serverURL string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, serverURL, nil)
+	req, err := http.NewRequest(http.MethodGet, serverURL, http.NoBody)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrRequestCreationFailed, err)
 	}
@@ -38,14 +49,8 @@ func GetServerInfo(client *http.Client, serverURL string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrResponseBodyRead, err)
-	}
-
-	return string(body), nil
+	return readBody(resp)
 }
 
 func PostServerData(client *http.Client, serverURL string, form url.Values) (string, error) {
@@ -53,14 +58,8 @@ func PostServerData(client *http.Client, serverURL string, form url.Values) (str
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrResponseBodyRead, err)
-	}
-
-	return string(body), nil
+	return readBody(resp)
 }
 
 func ExecuteWork(client *http.Client, serverURL string) {
