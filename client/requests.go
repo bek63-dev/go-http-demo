@@ -1,98 +1,93 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 )
 
-var (
-	ErrRequestCreationFailed = errors.New("не удалось создать запрос: ")
-	ErrRequestExecution      = errors.New("ошибка выполнения запроса: ")
-	ErrResponseBodyRead      = errors.New("ошибка чтения тела: ")
-	ErrServerUnavailable     = errors.New("сервер недоступен")
-)
-
-func PingServer(client *http.Client, serverURL string) error {
+func pingServer(client *http.Client, serverURL string) {
+	log.Printf("Проверка соединения с %s\n", serverURL)
 	res, err := client.Head(serverURL)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrServerUnavailable, err)
+		log.Printf("ошибка соединения: сервер недоступен: %v", err)
+		return
 	}
 	defer res.Body.Close()
-	return nil
+	log.Printf("Связь с сервером установлена\n")
 }
 
-func readBody(res *http.Response) (string, error) {
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrResponseBodyRead, err)
-	}
-
-	return string(body), nil
-}
-
-func GetServerInfo(client *http.Client, serverURL string) (string, error) {
+func getRequest(client *http.Client, serverURL string) *http.Response {
 	req, err := http.NewRequest(http.MethodGet, serverURL, http.NoBody)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrRequestCreationFailed, err)
+		log.Printf("Не удалось создать %s-запрос: %v", http.MethodGet, err)
+		return nil
 	}
 
+	// Добавляем дополнительные кастомные заголовки
 	req.Header.Set("Custom-Header", "John Doe")
 	req.Header.Set("Accept-Language", "en")
 
-	res, err := client.Do(req)
+	res, err := client.Do(req) // Отправляем запрос через клиент
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
+		log.Printf("Ошибка выполнения %s-запроса: %v", http.MethodGet, err)
+		return nil
 	}
-
-	return readBody(res)
+	log.Printf("%s-запрос. Запрос данных к %s\n", res.Request.Method, serverURL)
+	return res
 }
 
-func PostServerData(client *http.Client, serverURL string, form url.Values) (string, error) {
-	res, err := client.PostForm(serverURL, form)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
-	}
-
-	return readBody(res)
-}
-
-func ExecuteWork(client *http.Client, serverURL string) {
-	// Проверка соединения с сервером
-	log.Printf("Проверка соединения с %s\n", serverURL)
-
-	if err := PingServer(client, serverURL); err != nil {
-		log.Printf("Ошибка соединения: %v", err)
-		return
-	}
-	log.Printf("Связь с сервером установлена\n")
-
-	// GET запрос
-	log.Printf("\nGET-запрос. Запрос данных к %s\n", serverURL)
-	getResponse, err := GetServerInfo(client, serverURL)
-	if err != nil {
-		log.Printf("GET ошибка: %v", err)
-		return
-	}
-	fmt.Printf("\nРезультат GET запроса: \n%s\n", getResponse)
-
-	// POST запрос
-	log.Printf("\nPOST-запрос. Отправка формы к %s\n", serverURL)
+func postRequest(client *http.Client, serverURL string) *http.Response {
+	// Собираем данные формы в удобную структуру
 	form := url.Values{}
 	form.Set("nickname", "Student")
 	form.Set("feedback", "Всё отлично!")
 
-	postResponse, err := PostServerData(client, serverURL, form)
+	res, err := client.PostForm(serverURL, form) // Отправляем POST-запрос с данными формы
 	if err != nil {
-		log.Printf("POST ошибка: %v", err)
+		log.Printf("Ошибка выполнения %s-запроса: %v", http.MethodPost, err)
+		return nil
+	}
+	log.Printf("%s-запрос. Отправка формы к %s\n", res.Request.Method, serverURL)
+	return res
+}
+
+func printResponse(res *http.Response) {
+	// Проверка на пустой ответ от сервера
+	if res == nil {
 		return
 	}
-	fmt.Printf("\nРезультат POST запроса: \n%s\n", postResponse)
 
-	log.Println("Цикл работы клиента завершен успешно")
+	// Безопасно планируем закрытие тела ответа. Это главное правило для предотвращения утечек!
+	defer res.Body.Close()
+
+	// Формируем и выводим на экран статус и заголовок ответа сервера
+	fmt.Printf("[Статус и Заголовок ответа от сервера на %s-запрос:]", res.Request.Method)
+	dump, _ := httputil.DumpResponse(res, false)
+	fmt.Printf("\n%s", dump)
+
+	// Читаем все данные, которые прислал сервер
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Printf("Ошибка чтения тела %s-запроса: %v", res.Request.Method, err)
+		return
+	}
+	// Выводим все данные, которые прислал сервер на экран
+	fmt.Printf("[Вывод на экран ответ сервера на %s-запрос:] %s", res.Request.Method, string(body))
+}
+
+func executeWork(client *http.Client, serverURL string) {
+	// Проверка соединения с сервером
+	pingServer(client, serverURL)
+
+	getResponse := getRequest(client, serverURL) // формирование и отправка GET-запроса на сервер
+	printResponse(getResponse)                   // получение и вывод на экран ответ сервера на GET-запрос
+
+	postResponse := postRequest(client, serverURL) // формирование и отправка POST-запроса на сервер
+	printResponse(postResponse)                    // получение и вывод на экран ответ сервера на POST-запрос
+
+	log.Println("Цикл работы клиента завершен успешно\n")
 }
