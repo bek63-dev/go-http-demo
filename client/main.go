@@ -13,5 +13,5 @@ func main() {
 	}
 	log.Printf("Запуск клиента (timeout: %v). Целевой сервер: %s\n",
 		client.Timeout, serverURL)
-	ExecuteWork(client, serverURL)
+	executeWork(client, serverURL)
 }
