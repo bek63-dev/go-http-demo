@@ -17,18 +17,18 @@ var (
 )
 
 func PingServer(client *http.Client, serverURL string) error {
-	resp, err := client.Head(serverURL)
+	res, err := client.Head(serverURL)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrServerUnavailable, err)
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 	return nil
 }
 
-func readBody(resp *http.Response) (string, error) {
-	defer resp.Body.Close()
+func readBody(res *http.Response) (string, error) {
+	defer res.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrResponseBodyRead, err)
 	}
@@ -45,21 +45,21 @@ func GetServerInfo(client *http.Client, serverURL string) (string, error) {
 	req.Header.Set("Custom-Header", "John Doe")
 	req.Header.Set("Accept-Language", "en")
 
-	resp, err := client.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
 	}
 
-	return readBody(resp)
+	return readBody(res)
 }
 
 func PostServerData(client *http.Client, serverURL string, form url.Values) (string, error) {
-	resp, err := client.PostForm(serverURL, form)
+	res, err := client.PostForm(serverURL, form)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrRequestExecution, err)
 	}
 
-	return readBody(resp)
+	return readBody(res)
 }
 
 func ExecuteWork(client *http.Client, serverURL string) {
