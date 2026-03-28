@@ -36,22 +36,22 @@ func getRequest(client *http.Client, serverURL string) *http.Response {
 		log.Printf("Ошибка выполнения %s-запроса: %v", http.MethodGet, err)
 		return nil
 	}
-	log.Printf("%s-запрос. Запрос данных к %s\n", res.Request.Method, serverURL)
+	log.Printf("%s: Запрос данных к %s\n", res.Request.Method, serverURL)
 	return res
 }
 
 func postRequest(client *http.Client, serverURL string) *http.Response {
 	// Собираем данные формы в удобную структуру
 	form := url.Values{}
-	form.Set("nickname", "Student")
-	form.Set("feedback", "Всё отлично!")
+	form.Set("email", "my@my-best-site.ru")
+	form.Set("name", "Василий")
 
 	res, err := client.PostForm(serverURL, form) // Отправляем POST-запрос с данными формы
 	if err != nil {
 		log.Printf("Ошибка выполнения %s-запроса: %v", http.MethodPost, err)
 		return nil
 	}
-	log.Printf("%s-запрос. Отправка формы к %s\n", res.Request.Method, serverURL)
+	log.Printf("%s: Отправка формы к %s\n", res.Request.Method, serverURL)
 	return res
 }
 
