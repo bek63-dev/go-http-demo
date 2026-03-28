@@ -8,14 +8,12 @@ import (
 	"net/url"
 )
 
-// dumpHTTPRequest сериализует HTTP-запрос в "сырой" текстовый формат (Wire Format).
-// Она возвращает срез байтов, содержащий стартовую строку, заголовки и тело запроса.
-// Если в процессе дампа происходит ошибка, функция логирует её и возвращает пустой срез.
 func dumpHTTPRequest(res http.ResponseWriter, req *http.Request) {
 	dump, err := httputil.DumpRequest(req, true)
 	if err != nil {
 		log.Println("Ошибка при дампе:", err)
-		http.Error(res, fmt.Sprint(err), http.StatusInternalServerError)
+		http.Error(res, fmt.Sprint("Ошибка при дампе:", err), http.StatusInternalServerError)
+		return
 	}
 	fmt.Fprintf(res, "\n%s", dump)
 }
@@ -40,7 +38,8 @@ func handleHomeGet(res http.ResponseWriter, req *http.Request) {
 
 func handleHomePost(res http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
-		http.Error(res, "Ошибка парсинга формы", http.StatusBadRequest)
+		log.Println("Ошибка парсинга формы:", err)
+		http.Error(res, "Ошибка парсинга формы:", http.StatusBadRequest)
 		return
 	}
 	dumpHTTPRequest(res, req)
