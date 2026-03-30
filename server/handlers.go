@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 )
 
 func dumpHTTPRequest(res http.ResponseWriter, req *http.Request) {
@@ -44,6 +45,16 @@ func handleHomePost(res http.ResponseWriter, req *http.Request) {
 	}
 	dumpHTTPRequest(res, req)
 	dumpHTTPParams(res, req, req.PostForm)
+}
+
+func handleTime(res http.ResponseWriter, req *http.Request) {
+	t := time.Now().Format("02.01.2006 15:04:05")
+	fmt.Fprintf(res, "Текущее время: %s", t)
+}
+
+func handleDate(res http.ResponseWriter, req *http.Request) {
+	d := time.Now().Format("02.01.06")
+	fmt.Fprint(res, d)
 }
 
 func mainHandler(res http.ResponseWriter, req *http.Request) {
