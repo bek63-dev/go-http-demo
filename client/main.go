@@ -6,12 +6,13 @@ import (
 	"time"
 )
 
+const baseURL = "http://localhost:8080"
+
 func main() {
-	const serverURL = "http://localhost:8080"
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	log.Printf("Запуск клиента (timeout: %v). Целевой сервер: %s\n",
-		client.Timeout, serverURL)
-	executeWork(client, serverURL)
+	log.Printf("Запуск клиента (timeout: %v). Целевой путь к серверу: %s\n",
+		client.Timeout, baseURL)
+	executeWork(client, baseURL)
 }
